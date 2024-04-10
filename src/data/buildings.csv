@@ -1,4 +1,4 @@
-id,type,min_area,min_width,zone
+id,type,min_area,min_width,required_zone
 1, "power_plant", 100, 50, "industrial"
 2, "apartment_building", 200, 100, "residential"
 3, "office_building", 300, 150, "office"
@@ -9,3 +9,17 @@ id,type,min_area,min_width,zone
 8, "shopping_center", 800, 400, "commercial"
 9, "hotel", 900, 450, "commercial"
 10, "airport", 1000, 500, "municipal"
+11, "grocery_store", 1100, 550, "commercial"
+12, "restaurant", 1200, 600, "commercial"
+13, "gas_station", 1300, 650, "commercial"
+14, "park", 1400, 700, "municipal"
+15, "gym", 1500, 750, "commercial"
+16, "theater", 1600, 800, "commercial"
+17, "museum", 1700, 850, "commercial"
+18, "library", 1800, 900, "municipal"
+19, "fire_station", 1900, 950, "municipal"
+20, "police_station", 2000, 1000, "municipal"
+21, "post_office", 2100, 1050, "municipal"
+22, "bank", 2200, 1100, "commercial"
+23, "pharmacy", 2300, 1150, "commercial"
+24, "stadium", 2400, 1200, "commercial"
