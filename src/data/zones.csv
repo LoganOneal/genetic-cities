@@ -1,0 +1,6 @@
+id,type,min_area,min_width
+1, "residential", 100, 100
+2, "commercial", 100, 100
+3, "industrial", 100, 100
+4, "office", 100, 100
+5, "municipal", 100, 100
