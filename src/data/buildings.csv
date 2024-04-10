@@ -1,0 +1,11 @@
+id,type,min_area,min_width,zone
+1, "power_plant", 100, 50, "industrial"
+2, "apartment_building", 200, 100, "residential"
+3, "office_building", 300, 150, "office"
+4, "factory", 400, 200, "industrial"
+5, "warehouse", 500, 250, "industrial"
+6, "school", 600, 300, "municipal"
+7, "hospital", 700, 350, "commercial"
+8, "shopping_center", 800, 400, "commercial"
+9, "hotel", 900, 450, "commercial"
+10, "airport", 1000, 500, "municipal"
