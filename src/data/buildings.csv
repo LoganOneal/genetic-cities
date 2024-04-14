@@ -1,25 +1,25 @@
-id,type,min_area,min_width,required_zone
-1, "power_plant", 100, 50, "industrial"
-2, "apartment_building", 200, 100, "residential"
-3, "office_building", 300, 150, "office"
-4, "factory", 400, 200, "industrial"
-5, "warehouse", 500, 250, "industrial"
-6, "school", 600, 300, "municipal"
-7, "hospital", 700, 350, "commercial"
-8, "shopping_center", 800, 400, "commercial"
-9, "hotel", 900, 450, "commercial"
-10, "airport", 1000, 500, "municipal"
-11, "grocery_store", 1100, 550, "commercial"
-12, "restaurant", 1200, 600, "commercial"
-13, "gas_station", 1300, 650, "commercial"
-14, "park", 1400, 700, "municipal"
-15, "gym", 1500, 750, "commercial"
-16, "theater", 1600, 800, "commercial"
-17, "museum", 1700, 850, "commercial"
-18, "library", 1800, 900, "municipal"
-19, "fire_station", 1900, 950, "municipal"
-20, "police_station", 2000, 1000, "municipal"
-21, "post_office", 2100, 1050, "municipal"
-22, "bank", 2200, 1100, "commercial"
-23, "pharmacy", 2300, 1150, "commercial"
-24, "stadium", 2400, 1200, "commercial"
+id,type,min_area,min_width,zone,width,height
+1, "power_plant", 100,, 3, 2, 2
+2, "apartment_building", 200,, 1, 2, 2
+3, "office_building", 300,, 4, 2, 2
+4, "factory", 400,, 3, 2, 2
+5, "warehouse", 500,, 3, 2, 2
+6, "school", 600,, 5, 2, 2
+7, "hospital", 700,, 2, 3, 3
+8, "shopping_center", 800,, 2, 3, 3
+9, "hotel", 900,, 2, 3, 3
+10, "airport", 1000, 500, 5, 5, 5
+11, "grocery_store", 1100,, 2, 3, 3
+12, "restaurant", 1200,, 2, 1, 1
+13, "gas_station", 1300,, 2, 1, 1
+14, "park", 1400,, 5, 3, 3
+15, "gym", 1500,, 2, 2, 2
+16, "theater", 1600,, 2, 3, 3
+17, "museum", 1700,, 2, 3, 3
+18, "library", 1800,, 5, 1, 1
+19, "fire_station", 1900,, 5, 1, 1
+20, "police_station", 2000,, 5, 1, 1
+21, "post_office", 2100,, 5, 1, 1
+22, "bank", 2200,, 2, 1, 1
+23, "pharmacy", 2300,, 2, 1, 1
+24, "stadium", 2400, 1200, 2, 5, 5
