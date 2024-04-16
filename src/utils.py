@@ -41,21 +41,47 @@ def calculate_community_fitness(chromosome: list[int],
                 
     zone_score /= N
     
-    
     score = zone_score
     
-    print("Zone Score: ", zone_score)
     
     return score
     
 
     
-def plot_solution(N, x, y, w, l, W, L):
-    fig, ax = plt.subplots()
-    plt.scatter(x, y, s=0.1, color="black")
-    ax.add_patch(Rectangle((0, 0), W, L, edgecolor="black", linestyle="dashed", fill=False))
-    for i in range(N):
-        ax.add_patch(Rectangle((x[i], y[i]), w[i], l[i], edgecolor="tab:blue", fill=False))
-        plt.text(x[i] + (w[i] / 2) - 1, y[i] + (l[i] / 2) - 1, s=str(i))
+def plot_solution(chromosome, zones, buildings_df, W, H):
+    # Reshape the chromosome array into a 2D grid
+    grid = np.array(chromosome).reshape((W, H))
+    
+    # Create a color map based on unique values in the chromosome
+    unique_values = np.unique(grid)
+    color_map = plt.cm.get_cmap('viridis', len(unique_values))
+    
+    # Plot the grid
+    plt.figure(figsize=(20, 12))  # Adjust figure size as needed
+    plt.imshow(grid, cmap=color_map, interpolation='nearest')
+    
+    # Add grid lines
+    plt.grid(True, which='both', color='black', linewidth=0.5)
+    
+    # Set labels and title
+    plt.xlabel('Width')
+    plt.ylabel('Height')
+    plt.title('Chromosome Grid Visualization')
+    
+    
+    print("buildings_df", buildings_df)
+    
+    # Add legend mapping chromosome index to building type
+    legend_labels = {}
+    for index, row in buildings_df.iterrows():
+        legend_labels[index] = row['type']
+    
+    print("legend_labels", legend_labels)
+    
+    legend_handles = []
+    for value in unique_values:
+        legend_handles.append(plt.Rectangle((0,0),1,1,color=color_map(value)))
+    
+    plt.legend(legend_handles, [legend_labels[value-1] for value in unique_values], loc='upper left', title='Building Type', bbox_to_anchor=(1.05, 1), borderaxespad=0.)
+    
     plt.show()
-    #plt.savefig("./images/solution.pdf")

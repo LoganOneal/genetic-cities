@@ -30,7 +30,7 @@ def main():
 
     initial_population, zones = initialize_population(100, buildings_df, zones_df, W, H)
 
-    ga_instance = pygad.GA(num_generations=10,
+    ga_instance = pygad.GA(num_generations=1,
                            num_parents_mating=100,
                            fitness_func=fitness,
                            initial_population=initial_population,
@@ -54,10 +54,11 @@ def main():
 
     best_chromosome, best_score, _ = ga_instance.best_solution()
     print(best_score)
-    x, y, w, l = calculate_community_fitness(best_chromosome, zones, buildings_df, zones_df, W, H, return_solution=True)
-    plot_solution(len(buildings_df), x, y, w, l, W, L)
+    
+    # plot the chromosome, a W x H grid where each cell is a building
+    plot_solution(best_chromosome, zones, buildings_df, W, H)    
 
-    ga_instance.plot_fitness()
+    #ga_instance.plot_fitness()
     # ga_instance.plot_genes()
     # ga_instance.plot_new_solution_rate()
 
