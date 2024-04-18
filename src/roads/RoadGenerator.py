@@ -14,6 +14,8 @@ class RoadGenerator(object):
         globals.init()
 
     def randomize(self):
+        globals.init()
+
         X=Util.getPlane(self.size)
 
         mins = (0.0, 0.0)
@@ -31,7 +33,7 @@ class RoadGenerator(object):
 
             Util.add_square_at(self.QT,node)
 
-    def plot(self, print=False):
+    def plot(self, output=False):
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(111)
         ax.set_xlim(0, self.size-1.0)
@@ -41,8 +43,8 @@ class RoadGenerator(object):
         for d in range(0,len(globals.node_index)):
             self.QT.draw_rectangle(ax, depth=d)
 
-        if print:
-            print ("writing data to files...")
+        if output:
+            print("writing data to files...")
             fn = open('../node-list','w')
             fe = open('../edge-list','w')
 
@@ -58,4 +60,4 @@ class RoadGenerator(object):
             fn.close()
             fe.close()
 
-        plt.savefig('../images/rand-quad-road-network.png')
+        plt.savefig('./images/rand-quad-road-network.png')
