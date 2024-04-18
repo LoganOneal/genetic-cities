@@ -4,3 +4,4 @@ pygad
 matplotlib
 cvxpy
 networkx
+scikit-image
