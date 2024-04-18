@@ -56,7 +56,7 @@ def main():
     print(best_score)
     
     # plot the chromosome, a W x H grid where each cell is a building
-    plot_solution(best_chromosome, zones, buildings_df, W, H)    
+    plot_solution(best_chromosome, zones, buildings_df, zones_df, W, H)    
 
     #ga_instance.plot_fitness()
     # ga_instance.plot_genes()

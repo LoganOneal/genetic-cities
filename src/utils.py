@@ -4,6 +4,7 @@ from matplotlib.patches import Rectangle
 import pandas as pd
 from constants import NEARNESS_SCALE, W, H
 from skimage.measure import label, regionprops
+from matplotlib.colors import ListedColormap
 
 def calculate_community_fitness(chromosome: list[int], 
                          zones: list[int],
@@ -48,7 +49,7 @@ def calculate_community_fitness(chromosome: list[int],
     
 
     
-def plot_solution(chromosome, zones, buildings_df, W, H):
+def plot_solution(chromosome, zones, buildings_df, zones_df, W, H):
     # Reshape the chromosome array into a 2D grid
     grid = np.array(chromosome).reshape((W, H))
     
@@ -80,17 +81,18 @@ def plot_solution(chromosome, zones, buildings_df, W, H):
     plt.legend(legend_handles, [legend_labels[value-1] for value in unique_values], loc='upper left', title='Building Type', bbox_to_anchor=(1.05, 1), borderaxespad=0.)
     
     
-    print("Zones", zones)
+    print("Zones df", zones_df)
     
     # convert zones to a 2d W * H grid 
     zones = np.array(zones).reshape((W, H))
-    print("Reshaped zones", zones)
+
+    print("Zones", zones)
 
     # Label zones with bounding boxes
     for zone_id in np.unique(zones):
         if zone_id != 0:  # Skip zone 0, which is considered background
             # Find connected components (clusters) of the current zone
-            labeled_zones = label(zones == zone_id)
+            labeled_zones = label(zones == zone_id, connectivity=2)  # Set connectivity to 2
             regions = regionprops(labeled_zones)
             
             # Draw bounding boxes around each cluster of the current zone
@@ -99,5 +101,11 @@ def plot_solution(chromosome, zones, buildings_df, W, H):
                 width = max_x - min_x
                 height = max_y - min_y
                 plt.gca().add_patch(plt.Rectangle((min_x - 0.5, min_y - 0.5), width, height, fill=False, edgecolor='red', linewidth=2))
+                
+                # Get zone type from zones_df based on zone_id
+                zone_type = zones_df[zones_df["id"] == zone_id]["type"].values[0]
+                
+                # Annotate the zone with its type
+                plt.text((min_x), (min_y), zone_type, color='black', ha='center', va='center')
 
     plt.show()
