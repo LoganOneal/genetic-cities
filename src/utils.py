@@ -1,3 +1,4 @@
+import string
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -47,6 +48,61 @@ def calculate_community_fitness(chromosome: list[int],
     
     return score
     
+
+
+def calc_dist_based_fitness_score_within_region(chromosome: list[int], 
+                                                zones: list[int],
+                                                building_1: int,
+                                                building_2: int,
+                                                W: int,
+                                                H: int,
+                                                desired_rel_position: string):
+    
+    # Get the buildings and zones
+    grid = np.array(chromosome).reshape((W, H))
+    zones = np.array(zones).reshape((W, H))
+
+    # Get the regions
+    regions = []
+    for zone_id in np.unique(zones):
+        if zone_id != 0:  # Skip zone 0, which is considered background
+            # Find connected components (clusters) of the current zone
+            labeled_zones = label(zones == zone_id, connectivity=2)  # Set connectivity to 2
+            regions.extend(regionprops(labeled_zones))
+    
+    overall_score = 0
+    for region in regions:
+        # Get all instancecs of both building types in a given region
+        building_1s = []
+        building_2s = []
+        for x, y in region.coords:
+            if (grid[x][y] == building_1):
+                building_1s.append([x, y])
+            elif (grid[x][y] == building_2):
+                building_2s.append([x, y])
+
+        # If both types of buildings are not in the region, a perfect score is given
+        if (len(building_1s) == 0 or len(building_2s) == 0):
+            if (desired_rel_position == "far"):
+              overall_score += 1
+            continue
+        
+        # Otherwise, calculate the region's fitness score
+        total_dist = 0
+        for x1, y1 in building_1s:
+            for x2, y2 in building_2s:
+                total_dist += ((x2-x1) ** 2 + (y2-y1) ** 2) ** 0.5
+        avg_dist = total_dist / (len(building_1s) * len(building_2s))
+        max_dist = region.feret_diameter_max
+        if (desired_rel_position == "far"):
+            overall_score += (avg_dist / max_dist)
+        elif (desired_rel_position == "near"):
+            overall_score += ((max_dist - avg_dist) / max_dist)
+    
+    # Calculate the overall average score across all regions
+    overall_avg_score = overall_score / len(regions)
+    return overall_avg_score
+
 
     
 def plot_solution(chromosome, zones, buildings_df, zones_df, W, H):
