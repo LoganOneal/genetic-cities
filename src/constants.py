@@ -5,7 +5,7 @@
 '''
 NEARNESS_SCALE = {"A": 1, "E": 0, "I": 0, "O": 0, "U": 0, "X": 0}
 
-W, H = 9, 9
+W, H = 8,8
 
 ZONE_W = W // 3
 ZONE_H = H // 3

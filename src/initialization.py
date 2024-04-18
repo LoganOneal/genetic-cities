@@ -44,6 +44,7 @@ def initialize_population(sol_per_pop, buildings_df, zones_df, W, H):
             zone = zones_df.sample()
             # set the section to the zone id 
             zones[i * ZONE_W:(i + 1) * ZONE_W, j * ZONE_H:(j + 1) * ZONE_H] = zone["id"] 
+            
     zones = zones.flatten()
                     
     return initial_population, zones            
