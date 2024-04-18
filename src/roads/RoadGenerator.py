@@ -31,7 +31,7 @@ class RoadGenerator(object):
 
             Util.add_square_at(self.QT,node)
 
-    def print(self):
+    def plot(self, print=False):
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(111)
         ax.set_xlim(0, self.size-1.0)
@@ -41,20 +41,21 @@ class RoadGenerator(object):
         for d in range(0,len(globals.node_index)):
             self.QT.draw_rectangle(ax, depth=d)
 
-        print ("writing data to files...")
-        fn = open('../node-list','w')
-        fe = open('../edge-list','w')
+        if print:
+            print ("writing data to files...")
+            fn = open('../node-list','w')
+            fe = open('../edge-list','w')
 
-        edgeCount=0 #directed edge count
-        for point in globals.edges:
-            if point in globals.coord_id:
-                fn.write(str(globals.coord_id[point])+","+str(point.x)+","+str(point.y)+"\n")
+            edgeCount=0 #directed edge count
+            for point in globals.edges:
+                if point in globals.coord_id:
+                    fn.write(str(globals.coord_id[point])+","+str(point.x)+","+str(point.y)+"\n")
 
-            for edge in globals.edges[point]:
-                fe.write(str(globals.coord_id[point])+","+str(globals.coord_id[edge])+"\n")
-                edgeCount=edgeCount+1
+                for edge in globals.edges[point]:
+                    fe.write(str(globals.coord_id[point])+","+str(globals.coord_id[edge])+"\n")
+                    edgeCount=edgeCount+1
 
-        fn.close()
-        fe.close()
+            fn.close()
+            fe.close()
 
         plt.savefig('../images/rand-quad-road-network.png')
