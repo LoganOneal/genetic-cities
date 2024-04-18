@@ -10,7 +10,7 @@ import time
 from dataloaders import load_zone_info, load_building_info, load_relationship_graph
 from constants import NEARNESS_SCALE, W, H
 from initialization import initialize_population
-from utils import calculate_community_fitness, plot_solution
+from utils import calc_dist_based_fitness_score_for_regions, calc_dist_based_fitness_score_within_region, calculate_community_fitness, plot_solution
 
 zones_df = load_zone_info("./data/zones.csv")
 
@@ -56,7 +56,7 @@ def main():
     print(best_score)
     
     # plot the chromosome, a W x H grid where each cell is a building
-    plot_solution(best_chromosome, zones, buildings_df, zones_df, W, H)    
+    plot_solution(best_chromosome, zones, buildings_df, zones_df, W, H)
 
     #ga_instance.plot_fitness()
     # ga_instance.plot_genes()
