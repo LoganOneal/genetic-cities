@@ -1,3 +1,4 @@
+from itertools import combinations
 import string
 import numpy as np
 import matplotlib.pyplot as plt
@@ -84,16 +85,25 @@ def calc_dist_based_fitness_score_within_region(chromosome: list[int],
         # If both types of buildings are not in the region, a perfect score is given
         if (len(building_1s) == 0 or len(building_2s) == 0):
             if (desired_rel_position == "far"):
-              overall_score += 1
+                overall_score += 1
             continue
         
         # Otherwise, calculate the region's fitness score
+        # Calculate the max distance for the given region
+        max_dist = 0
+        for pair in combinations(region.coords, 2):
+            x1, y1 = pair[0]
+            x2, y2 = pair[1]
+            total_dist = ((x2-x1) ** 2 + (y2-y1) ** 2) ** 0.5
+            if (total_dist > max_dist):
+                max_dist = total_dist
+        
+        # Calculate the distance between each building 1 and each building 2
         total_dist = 0
         for x1, y1 in building_1s:
             for x2, y2 in building_2s:
                 total_dist += ((x2-x1) ** 2 + (y2-y1) ** 2) ** 0.5
         avg_dist = total_dist / (len(building_1s) * len(building_2s))
-        max_dist = region.feret_diameter_max
         if (desired_rel_position == "far"):
             overall_score += (avg_dist / max_dist)
         elif (desired_rel_position == "near"):
