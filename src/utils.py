@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import pandas as pd
 from constants import NEARNESS_SCALE, W, H
-
+from skimage.measure import label, regionprops
 
 def calculate_community_fitness(chromosome: list[int], 
                          zones: list[int],
@@ -67,21 +67,37 @@ def plot_solution(chromosome, zones, buildings_df, W, H):
     plt.xlabel('Width')
     plt.ylabel('Height')
     plt.title('Chromosome Grid Visualization')
-    
-    
-    print("buildings_df", buildings_df)
-    
+        
     # Add legend mapping chromosome index to building type
     legend_labels = {}
     for index, row in buildings_df.iterrows():
         legend_labels[index] = row['type']
-    
-    print("legend_labels", legend_labels)
-    
+        
     legend_handles = []
     for value in unique_values:
         legend_handles.append(plt.Rectangle((0,0),1,1,color=color_map(value)))
     
     plt.legend(legend_handles, [legend_labels[value-1] for value in unique_values], loc='upper left', title='Building Type', bbox_to_anchor=(1.05, 1), borderaxespad=0.)
     
+    
+    print("Zones", zones)
+    
+    # convert zones to a 2d W * H grid 
+    zones = np.array(zones).reshape((W, H))
+    print("Reshaped zones", zones)
+
+    # Label zones with bounding boxes
+    for zone_id in np.unique(zones):
+        if zone_id != 0:  # Skip zone 0, which is considered background
+            # Find connected components (clusters) of the current zone
+            labeled_zones = label(zones == zone_id)
+            regions = regionprops(labeled_zones)
+            
+            # Draw bounding boxes around each cluster of the current zone
+            for region in regions:
+                min_y, min_x, max_y, max_x = region.bbox
+                width = max_x - min_x
+                height = max_y - min_y
+                plt.gca().add_patch(plt.Rectangle((min_x - 0.5, min_y - 0.5), width, height, fill=False, edgecolor='red', linewidth=2))
+
     plt.show()
