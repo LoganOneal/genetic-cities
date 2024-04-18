@@ -7,6 +7,7 @@ import pandas as pd
 from constants import NEARNESS_SCALE, W, H
 from skimage.measure import label, regionprops
 from matplotlib.colors import ListedColormap
+from scipy.spatial.distance import cdist
 
 def calculate_community_fitness(chromosome: list[int], 
                          zones: list[int],
@@ -51,6 +52,68 @@ def calculate_community_fitness(chromosome: list[int],
     
 
 
+def calc_dist_based_fitness_score_for_regions(chromosome: list[int], 
+                                              zones: list[int],
+                                              zone_1: int,
+                                              zone_2: int,
+                                              W: int,
+                                              H: int,
+                                              desired_rel_position: string):
+    # Get the zones
+    zones = np.array(zones).reshape((W, H))
+
+    # Get the regions
+    regions = []
+    for zone_id in np.unique(zones):
+        if zone_id != 0:  # Skip zone 0, which is considered background
+            # Find connected components (clusters) of the current zone
+            labeled_zones = label(zones == zone_id, connectivity=2)  # Set connectivity to 2
+            regions.extend(regionprops(labeled_zones))
+        
+    # Get all instances of both zones
+    zone_1s = []
+    zone_2s = []
+    zone_label = 0
+    for region in regions:
+        if (region.label == 1):
+            zone_label += 1
+        if (zone_label == zone_1):
+            zone_1s.append(region.coords)
+        elif (zone_label == zone_2):
+            zone_2s.append(region.coords)
+
+    # If both types of regions are not present, 
+    # a perfect score is given if "far" is the preferred relative position
+    if (len(zone_1s) == 0 or len(zone_2s) == 0):
+        if (desired_rel_position == "far"):
+            return 1
+    
+    # Calculate the average distance between each zone_1 and each zone_2
+    total_dist = 0
+    for z1_coords in zone_1s:
+        for z2_coords in zone_2s:
+            test = np.zeros((W, H))
+            for x, y in z1_coords:
+                test[x][y] = 1
+            for x, y in z2_coords:
+                test[x][y] = 2
+            min_dist = cdist(np.argwhere(test==1),np.argwhere(test==2),'euclidean').min()
+            total_dist += min_dist
+    avg_dist = total_dist / (len(zone_1s) * len(zone_2s))
+
+    # Calculate the max possible distance
+    max_dist = ((W-2) ** 2 + (H-2) ** 2) ** 0.5
+
+    # Calculate the fitness score
+    score = -1
+    if (desired_rel_position == "far"):
+        score = avg_dist / max_dist
+    elif (desired_rel_position == "near"):
+        score = (max_dist - avg_dist) / max_dist
+    return score
+
+
+
 def calc_dist_based_fitness_score_within_region(chromosome: list[int], 
                                                 zones: list[int],
                                                 building_1: int,
@@ -82,7 +145,8 @@ def calc_dist_based_fitness_score_within_region(chromosome: list[int],
             elif (grid[x][y] == building_2):
                 building_2s.append([x, y])
 
-        # If both types of buildings are not in the region, a perfect score is given
+        # If both types of buildings are not in the region, 
+        # a perfect score is given if "far" is the preferred relative position
         if (len(building_1s) == 0 or len(building_2s) == 0):
             if (desired_rel_position == "far"):
                 overall_score += 1
