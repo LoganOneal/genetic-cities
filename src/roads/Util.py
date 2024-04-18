@@ -1,7 +1,7 @@
 import numpy as np
 from queue import Queue
 import itertools, random
-from roads import Point
+from roads.Point import Point
 
 def getPlane(size):
     X=[]
