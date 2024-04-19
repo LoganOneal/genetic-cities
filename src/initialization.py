@@ -1,6 +1,9 @@
 import numpy as np
 import networkx as nx
 from constants import ZONE_W, ZONE_H
+from roads.RoadGenerator import RoadGenerator
+
+DEBUG = True
 
 def initialize_population(sol_per_pop, N, relationship_graph):  # TODO - Randomly switch directions
     initial_population = []
@@ -16,6 +19,8 @@ def initialize_population(sol_per_pop, N, relationship_graph):  # TODO - Randoml
     return initial_population
 
 def initialize_population(sol_per_pop, buildings_df, zones_df, W, H):
+    initialize_road_network(W, W)
+    
     print("Initializing population")
     # create a population where each chronosome is a W * H grid of buildings with random positions
     min_area = W*H
@@ -66,3 +71,9 @@ def get_fruchterman_reingold_relative_positionings(G):
         else:
             B.add_edge(j, i)
     return L, B
+
+def initialize_road_network(W, max_nodes):
+    generator = RoadGenerator(W, max_nodes)
+    generator.randomize()
+    
+    if DEBUG: generator.plot()

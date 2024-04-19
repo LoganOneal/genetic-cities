@@ -8,6 +8,7 @@ from constants import NEARNESS_SCALE, W, H
 from skimage.measure import label, regionprops
 from matplotlib.colors import ListedColormap
 from scipy.spatial.distance import cdist
+import roads.globals as globals
 
 def calculate_community_fitness(chromosome: list[int], 
                          zones: list[int],
