@@ -20,18 +20,23 @@ def initialize_population(sol_per_pop, buildings_df, zones_df, W, H):
                 # set chromosme indx to building id
                 chromosome[i, j] = building["id"]
 
+        print("Chromosome", chromosome.shape)
         chromosome = chromosome.flatten()
         initial_population.append(chromosome)
         
-    zones = np.zeros((W, H))
-    # cluster zones together into 2x2 sections
-    for i in range(W // ZONE_W):
-        for j in range(H // ZONE_H):
-            # get random zone
+    
+        
+    zones = np.zeros((W // ZONE_W, H // ZONE_H))
+    # each zone cell represent a ZONE_W x ZONE_H section
+    for i in range(zones.shape[0]):
+        for j in range(zones.shape[1]):
             zone = zones_df.sample()
-            # set the section to the zone id 
-            zones[i * ZONE_W:(i + 1) * ZONE_W, j * ZONE_H:(j + 1) * ZONE_H] = zone["id"] 
-            
+            zones[i, j] = zone["id"]
+
     zones = zones.flatten()
+    
+    # append zone to each chromosome
+    for i in range(len(initial_population)):
+        initial_population[i] = np.append(initial_population[i], zones)
                     
-    return initial_population, zones            
+    return initial_population            

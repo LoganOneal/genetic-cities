@@ -21,14 +21,14 @@ buildings_df  = load_building_info("./data/buildings.csv")
 n_iter = 1
 def main():
     def fitness(ga_instance, solution, solution_idx):
-            return calculate_community_fitness(solution, zones, buildings_df, zones_df, W, H, return_solution=True)
+            return calculate_community_fitness(solution, buildings_df, zones_df, W, H, return_solution=True)
    
     def on_generation(ga_instance):
         global n_iter
         print("Generation: ", n_iter)
         n_iter += 1
 
-    initial_population, zones = initialize_population(100, buildings_df, zones_df, W, H)
+    initial_population = initialize_population(100, buildings_df, zones_df, W, H)
 
     ga_instance = pygad.GA(num_generations=1,
                            num_parents_mating=100,
@@ -54,9 +54,9 @@ def main():
 
     best_chromosome, best_score, _ = ga_instance.best_solution()
     print(best_score)
-    
-    # plot the chromosome, a W x H grid where each cell is a building
-    plot_solution(best_chromosome, zones, buildings_df, zones_df, W, H)
+
+    # plot the best solution
+    plot_solution(best_chromosome, buildings_df, zones_df, W, H)
 
     #ga_instance.plot_fitness()
     # ga_instance.plot_genes()
