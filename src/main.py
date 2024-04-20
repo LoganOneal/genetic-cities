@@ -8,7 +8,7 @@ from matplotlib.patches import Rectangle
 import time
 
 from dataloaders import load_zone_info, load_zone_relationship_info, load_building_info, load_building_relationship_info, load_relationship_graph
-from constants import NEARNESS_SCALE, W, H
+import constants
 from initialization import initialize_population
 from utils import calculate_community_fitness, plot_solution
 
@@ -22,17 +22,29 @@ building_relationships_df = load_building_relationship_info("./data/building_rel
 n_iter = 1
 def main():
     def fitness(ga_instance, solution, solution_idx):
-            return calculate_community_fitness(solution, buildings_df, building_relationships_df, zone_relationships_df, W, H, return_solution=True)
+            return calculate_community_fitness(solution, buildings_df, building_relationships_df, zone_relationships_df, constants.W, constants.H, return_solution=True)
    
     def on_generation(ga_instance):
         global n_iter
         print("Generation: ", n_iter)
         n_iter += 1
 
-    initial_population = initialize_population(100, buildings_df, zones_df, W, H)
+    def mutation_func(offspring, ga_instance):
+        for chromosome_idx in range(offspring.shape[0]):
+            if np.random.rand() < constants.MUTATION_RATE:
+                gene_idx = np.random.randint(0, offspring.shape[1])
 
-    ga_instance = pygad.GA(num_generations=1,
-                           num_parents_mating=100,
+                # Separates the chromosome into building and zone genes
+                if gene_idx < constants.W * constants.H:
+                    offspring[chromosome_idx, gene_idx] = np.random.randint(1, len(buildings_df)+1)
+                else:
+                    offspring[chromosome_idx, gene_idx] = np.random.randint(1, len(zones_df)+1)
+        return offspring
+
+    initial_population = initialize_population(constants.POPULATION_SIZE, buildings_df, zones_df, constants.W, constants.H)
+
+    ga_instance = pygad.GA(num_generations=constants.NUM_GENERATIONS,
+                           num_parents_mating=constants.NUM_PARENTS_MATING,
                            fitness_func=fitness,
                            initial_population=initial_population,
                            gene_type=int,
@@ -40,8 +52,7 @@ def main():
                            parent_selection_type="sss",
                            keep_parents=-1,
                            crossover_type="single_point",
-                           mutation_type="random",
-                           mutation_percent_genes=5,
+                           mutation_type=mutation_func,
                            on_generation=on_generation, 
                           )
     
@@ -57,7 +68,7 @@ def main():
     print(best_score)
 
     # plot the best solution
-    plot_solution(best_chromosome, buildings_df, zones_df, W, H)
+    plot_solution(best_chromosome, buildings_df, zones_df, constants.W, constants.H)
 
     #ga_instance.plot_fitness()
     # ga_instance.plot_genes()
