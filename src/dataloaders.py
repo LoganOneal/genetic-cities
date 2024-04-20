@@ -7,10 +7,20 @@ def load_zone_info(file_path):
 
     return zones
 
+def load_zone_relationship_info(file_path):
+    zone_relationships_info_df = pd.read_csv(file_path)
+
+    return zone_relationships_info_df  
+
 def load_building_info(file_path):
     buildings_df = pd.read_csv(file_path)
 
     return buildings_df
+
+def load_building_relationship_info(file_path):
+    building_relationships_df = pd.read_csv(file_path)
+
+    return building_relationships_df
 
 def load_relationship_graph(N, file_path):
     relationships_df = pd.read_csv(file_path, header='infer')
