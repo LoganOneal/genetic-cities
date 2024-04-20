@@ -4,13 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import pandas as pd
-from constants import NEARNESS_SCALE, W, H
+from constants import NEARNESS_SCALE, W, H, ZONE_W, ZONE_H
 from skimage.measure import label, regionprops
 from matplotlib.colors import ListedColormap
 from scipy.spatial.distance import cdist
+import roads.globals as globals
 
 def calculate_community_fitness(chromosome: list[int], 
-                         zones: list[int],
                          buildings_df: pd.DataFrame,
                          zones_df: pd.DataFrame,
                          W: int,
@@ -34,11 +34,11 @@ def calculate_community_fitness(chromosome: list[int],
 
     # calculate the percent of buildings in the correct zone 
     zone_score = 0
-    for i in range(W):
-        for j in range(H):
-            building_id = chromosome[i * W + j]
-            zone_id = zones[i * W + j]
+    for i in range(W // ZONE_W):
+        for j in range(H // ZONE_H):
+            zone_id = chromosome[W * H + i * W // ZONE_W + j]
             if zone_id != 0:
+                building_id = chromosome[i * W // ZONE_W + j]
                 building = buildings_df[buildings_df["id"] == building_id]
                 if building["zone"].values[0] == zone_id:
                     zone_score += 1
@@ -46,7 +46,6 @@ def calculate_community_fitness(chromosome: list[int],
     zone_score /= N
     
     score = zone_score
-    
     
     return score
     
@@ -179,17 +178,20 @@ def calculate_building_proximity_score(chromosome: list[int],
 
 
     
-def plot_solution(chromosome, zones, buildings_df, zones_df, W, H):
-    # Reshape the chromosome array into a 2D grid
-    grid = np.array(chromosome).reshape((W, H))
+def plot_solution(chromosome, buildings_df, zones_df, W, H):
+    # reshape the first W * H elements of the chromosome into a W x H building grid
+    buildings_grid = np.array(chromosome[:W*H]).reshape((W, H))
+    
+    # reshape the remaining elements into a W // ZONE_W x H // ZONE_H zone grid
+    zones_grid = np.array(chromosome[W*H:]).reshape((W // ZONE_W, H // ZONE_H))
     
     # Create a color map based on unique values in the chromosome
-    unique_values = np.unique(grid)
+    unique_values = np.unique(buildings_grid)
     color_map = plt.cm.get_cmap('viridis', len(unique_values))
     
     # Plot the grid
     plt.figure(figsize=(20, 12))  # Adjust figure size as needed
-    plt.imshow(grid, cmap=color_map, interpolation='nearest')
+    plt.imshow(buildings_grid, cmap=color_map, interpolation='nearest')
     
     # Add grid lines
     plt.grid(True, which='both', color='black', linewidth=0.5)
@@ -213,18 +215,18 @@ def plot_solution(chromosome, zones, buildings_df, zones_df, W, H):
     
     print("Zones df", zones_df)
     
-    # convert zones to a 2d W * H grid 
-    zones = np.array(zones).reshape((W, H))
-
-    print("Zones", zones)
+    print("Zones grid", zones_grid)
+    
+    # scale zones_grid to size of buildings_grid
+    zones_grid = np.repeat(np.repeat(zones_grid, ZONE_W, axis=0), ZONE_H, axis=1)
 
     # Label zones with bounding boxes
-    for zone_id in np.unique(zones):
+    for zone_id in np.unique(zones_grid):
         if zone_id != 0:  # Skip zone 0, which is considered background
             # Find connected components (clusters) of the current zone
-            labeled_zones = label(zones == zone_id, connectivity=2)  # Set connectivity to 2
+            labeled_zones = label(zones_grid == zone_id, connectivity=2)  # Set connectivity to 2
             regions = regionprops(labeled_zones)
-            
+            print("Regions", regions)
             # Draw bounding boxes around each cluster of the current zone
             for region in regions:
                 min_y, min_x, max_y, max_x = region.bbox
@@ -236,6 +238,6 @@ def plot_solution(chromosome, zones, buildings_df, zones_df, W, H):
                 zone_type = zones_df[zones_df["id"] == zone_id]["type"].values[0]
                 
                 # Annotate the zone with its type
-                plt.text((min_x), (min_y), zone_type, color='black', ha='center', va='center')
+                plt.text((min_x + .5), (min_y + .5), zone_type, color='black', ha='center', va='center')
 
     plt.show()

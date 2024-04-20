@@ -34,7 +34,7 @@ class QuadTree(object):
         self.children = []
 
     def add_square(self):
-        mids = 0.5 * (self.maxs + self.mins)
+        mids = [int(x) for x in 0.5 * (self.maxs + self.mins)]
         if DEBUG: print (self.data)
         if DEBUG: print (mids)
         xmin, ymin = self.mins
