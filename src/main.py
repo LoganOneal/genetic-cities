@@ -7,21 +7,22 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import time
 
-from dataloaders import load_zone_info, load_building_info, load_relationship_graph
+from dataloaders import load_zone_info, load_zone_relationship_info, load_building_info, load_building_relationship_info, load_relationship_graph
 from constants import NEARNESS_SCALE, W, H
 from initialization import initialize_population
-from utils import calc_dist_based_fitness_score_for_regions, calc_dist_based_fitness_score_within_region, calculate_community_fitness, plot_solution
+from utils import calculate_community_fitness, plot_solution
 
 zones_df = load_zone_info("./data/zones.csv")
-
+zone_relationships_df = load_zone_relationship_info("./data/zone_relationships.csv")
 buildings_df  = load_building_info("./data/buildings.csv")
+building_relationships_df = load_building_relationship_info("./data/building_relationships.csv")
 
 #building_relationship_graph, building_must_be_close = load_relationship_graph(num_buildings, "./data/building_relationships.csv")
 
 n_iter = 1
 def main():
     def fitness(ga_instance, solution, solution_idx):
-            return calculate_community_fitness(solution, buildings_df, zones_df, W, H, return_solution=True)
+            return calculate_community_fitness(solution, buildings_df, building_relationships_df, zone_relationships_df, W, H, return_solution=True)
    
     def on_generation(ga_instance):
         global n_iter

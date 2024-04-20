@@ -11,11 +11,12 @@ from scipy.spatial.distance import cdist
 import roads.globals as globals
 
 def calculate_community_fitness(chromosome: list[int], 
-                         buildings_df: pd.DataFrame,
-                         zones_df: pd.DataFrame,
-                         W: int,
-                         H: int,
-                         return_solution: bool=False) -> float:
+                                buildings_df: pd.DataFrame,
+                                building_relationships_df: pd.DataFrame,
+                                zone_relationships_df: pd.DataFrame,
+                                W: int,
+                                H: int,
+                                return_solution: bool=False) -> float:
     """
     Basis for the fitness function for a specific chromosome.
   
@@ -29,6 +30,20 @@ def calculate_community_fitness(chromosome: list[int],
     float: the score of the community layout
     """
 
+    building_in_correct_zone_score = calculate_percent_of_buildings_in_correct_zone(chromosome, buildings_df, W, H)
+    zone_proximity_score = calculate_overall_zone_proximity_score(chromosome, zone_relationships_df, W, H)
+    building_proximity_score = calculate_overall_building_proximity_score(chromosome, building_relationships_df, W, H)
+    score = (0.3 * building_in_correct_zone_score) + \
+            (0.35 * zone_proximity_score) + \
+            (0.35 * building_proximity_score)  
+    return score
+
+
+
+def calculate_percent_of_buildings_in_correct_zone(chromosome: list[int], 
+                                                   buildings_df: pd.DataFrame,
+                                                   W: int,
+                                                   H: int):
     # get the number of buildings in the community
     N = len(buildings_df)    
 
@@ -44,11 +59,34 @@ def calculate_community_fitness(chromosome: list[int],
                     zone_score += 1
                 
     zone_score /= N
-    
     score = zone_score
-    
     return score
-    
+
+
+
+def calculate_overall_zone_proximity_score(chromosome: list[int],
+                                           zone_relationships_df: pd.DataFrame,
+                                           W: int,
+                                           H: int):
+    # Get the important zone relationships
+    # ('X' means the two zone types should be far away from each other)
+    # ('E' means the two zone types should be near each other)
+    relationships_df = zone_relationships_df[(zone_relationships_df["relationship"] == "X") |
+                                             (zone_relationships_df["relationship"] == "E")]
+
+    # Calculate the proximity score for each important zone relationship
+    score = 0
+    for index, row in relationships_df.iterrows():
+        if (row["relationship"] == "X"):
+            desired_rel_position = "far"
+        else:
+            desired_rel_position = "near"
+        score += calculate_building_proximity_score(chromosome, row["id1"], row["id2"], W, H, desired_rel_position)
+
+    # Take the average of the promixity scores
+    score /= relationships_df.shape[0]
+    return score
+
 
 
 def calculate_zone_proximity_score(chromosome: list[int], 
@@ -57,10 +95,8 @@ def calculate_zone_proximity_score(chromosome: list[int],
                                    W: int,
                                    H: int,
                                    desired_rel_position: string):    
-    
     # Reshape the remaining elements into a W // ZONE_W x H // ZONE_H zone grid
     zones_grid = np.array(chromosome[W*H:]).reshape((W // ZONE_W, H // ZONE_H))
-    print("zones", zones_grid)
 
     # Get the zones
     zones = []
@@ -83,10 +119,14 @@ def calculate_zone_proximity_score(chromosome: list[int],
             zone_2s.append(zone.coords)
 
     # If both types of zones are not present, 
-    # a perfect score is given if "far" is the preferred relative position
+    # a perfect score is given if "far" is the preferred relative position, and
+    # a minimum score is given if "near" is the preferred relative position
+
     if (len(zone_1s) == 0 or len(zone_2s) == 0):
         if (desired_rel_position == "far"):
             return 1
+        elif (desired_rel_position == "near"):
+            return 0
     
     # Calculate the average distance between each zone_1 and each zone_2
     total_dist = 0
@@ -110,21 +150,43 @@ def calculate_zone_proximity_score(chromosome: list[int],
         score = avg_dist / max_dist
     elif (desired_rel_position == "near"):
         score = (max_dist - avg_dist - 1) / max_dist
-    print("score", score)
     return score
 
 
 
-def calculate_building_proximity_score(chromosome: list[int], 
-                                                building_1: int,
-                                                building_2: int,
-                                                W: int,
-                                                H: int,
-                                                desired_rel_position: string):
+def calculate_overall_building_proximity_score(chromosome: list[int],
+                                               building_relationships_df: pd.DataFrame, 
+                                               W: int,
+                                               H: int):
+    # Get the important building relationships
+    # ('X' means the two building types should be far away from each other)
+    # ('E' means the two building types should be near each other)
+    relationships_df = building_relationships_df[(building_relationships_df["relationship"] == "X") |
+                                                 (building_relationships_df["relationship"] == "E")]
     
+    # Calculate the proximity score for each important building relationship
+    score = 0
+    for index, row in relationships_df.iterrows():
+        if (row["relationship"] == "X"):
+            desired_rel_position = "far"
+        else:
+            desired_rel_position = "near"
+        score += calculate_building_proximity_score(chromosome, row["id1"], row["id2"], W, H, desired_rel_position)
+
+    # Take the average of the promixity scores
+    score /= relationships_df.shape[0]
+    return score
+    
+
+
+def calculate_building_proximity_score(chromosome: list[int], 
+                                       building_1: int,
+                                       building_2: int,
+                                       W: int,
+                                       H: int,
+                                       desired_rel_position: string):
     # Reshape the first W * H elements of the chromosome into a W x H building grid
     buildings_grid = np.array(chromosome[:W*H]).reshape((W, H))
-    print("buildings", buildings_grid)
 
     # Get the buildings
     buildings = []
@@ -145,14 +207,15 @@ def calculate_building_proximity_score(chromosome: list[int],
             building_1s.append(building.coords)
         elif (building_label == building_2):
             building_2s.append(building.coords)
-    print("buildings_1s len", len(building_1s))
-    print("buildings_2s len", len(building_2s))
 
     # If both types of buildings are not present, 
-    # a perfect score is given if "far" is the preferred relative position
+    # a maximum score is given if "far" is the preferred relative position, and
+    # a minimum score is given if "near" is the preferred relative position
     if (len(building_1s) == 0 or len(building_2s) == 0):
         if (desired_rel_position == "far"):
             return 1
+        elif (desired_rel_position == "near"):
+            return 0
     
     # Calculate the average distance between each building_1 and each building_2
     total_dist = 0
@@ -164,14 +227,11 @@ def calculate_building_proximity_score(chromosome: list[int],
             for x, y in z2_coords:
                 test[x][y] = 2
             min_dist = cdist(np.argwhere(test==1),np.argwhere(test==2),'euclidean').min()
-            print("min dist", min_dist)
             total_dist += min_dist
     avg_dist = total_dist / (len(building_1s) * len(building_2s))
-    print("avg dist", avg_dist)
 
     # Calculate the max possible distance
     max_dist = ((W-1) ** 2 + (H-1) ** 2) ** 0.5
-    print("max dist", max_dist)
 
     # Calculate the fitness score
     score = -1
@@ -179,7 +239,6 @@ def calculate_building_proximity_score(chromosome: list[int],
         score = avg_dist / max_dist
     elif (desired_rel_position == "near"):
         score = (max_dist - avg_dist) / max_dist
-    print("score", score)
     return score
 
 
