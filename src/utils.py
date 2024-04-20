@@ -52,7 +52,7 @@ def calculate_community_fitness(chromosome: list[int],
     
 
 
-def calc_dist_based_fitness_score_for_regions(chromosome: list[int], 
+def calculate_zone_proximity_score(chromosome: list[int], 
                                               zones: list[int],
                                               zone_1: int,
                                               zone_2: int,
@@ -114,7 +114,7 @@ def calc_dist_based_fitness_score_for_regions(chromosome: list[int],
 
 
 
-def calc_dist_based_fitness_score_within_region(chromosome: list[int], 
+def calculate_building_proximity_score(chromosome: list[int], 
                                                 zones: list[int],
                                                 building_1: int,
                                                 building_2: int,
