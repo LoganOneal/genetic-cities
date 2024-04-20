@@ -52,36 +52,37 @@ def calculate_community_fitness(chromosome: list[int],
 
 
 def calculate_zone_proximity_score(chromosome: list[int], 
-                                              zones: list[int],
-                                              zone_1: int,
-                                              zone_2: int,
-                                              W: int,
-                                              H: int,
-                                              desired_rel_position: string):
-    # Get the zones
-    zones = np.array(zones).reshape((W, H))
+                                   zone_1: int,
+                                   zone_2: int,
+                                   W: int,
+                                   H: int,
+                                   desired_rel_position: string):    
+    
+    # Reshape the remaining elements into a W // ZONE_W x H // ZONE_H zone grid
+    zones_grid = np.array(chromosome[W*H:]).reshape((W // ZONE_W, H // ZONE_H))
+    print("zones", zones_grid)
 
-    # Get the regions
-    regions = []
-    for zone_id in np.unique(zones):
+    # Get the zones
+    zones = []
+    for zone_id in np.unique(zones_grid):
         if zone_id != 0:  # Skip zone 0, which is considered background
             # Find connected components (clusters) of the current zone
-            labeled_zones = label(zones == zone_id, connectivity=2)  # Set connectivity to 2
-            regions.extend(regionprops(labeled_zones))
+            labeled_zones = label(zones_grid == zone_id, connectivity=2)  # Set connectivity to 2
+            zones.extend(regionprops(labeled_zones))
         
     # Get all instances of both zones
     zone_1s = []
     zone_2s = []
     zone_label = 0
-    for region in regions:
-        if (region.label == 1):
+    for zone in zones:
+        if (zone.label == 1):
             zone_label += 1
         if (zone_label == zone_1):
-            zone_1s.append(region.coords)
+            zone_1s.append(zone.coords)
         elif (zone_label == zone_2):
-            zone_2s.append(region.coords)
+            zone_2s.append(zone.coords)
 
-    # If both types of regions are not present, 
+    # If both types of zones are not present, 
     # a perfect score is given if "far" is the preferred relative position
     if (len(zone_1s) == 0 or len(zone_2s) == 0):
         if (desired_rel_position == "far"):
@@ -101,7 +102,76 @@ def calculate_zone_proximity_score(chromosome: list[int],
     avg_dist = total_dist / (len(zone_1s) * len(zone_2s))
 
     # Calculate the max possible distance
-    max_dist = ((W-2) ** 2 + (H-2) ** 2) ** 0.5
+    max_dist = ((W-ZONE_W) ** 2 + (H-ZONE_H) ** 2) ** 0.5
+
+    # Calculate the fitness score
+    score = -1
+    if (desired_rel_position == "far"):
+        score = avg_dist / max_dist
+    elif (desired_rel_position == "near"):
+        score = (max_dist - avg_dist - 1) / max_dist
+    print("score", score)
+    return score
+
+
+
+def calculate_building_proximity_score(chromosome: list[int], 
+                                                building_1: int,
+                                                building_2: int,
+                                                W: int,
+                                                H: int,
+                                                desired_rel_position: string):
+    
+    # Reshape the first W * H elements of the chromosome into a W x H building grid
+    buildings_grid = np.array(chromosome[:W*H]).reshape((W, H))
+    print("buildings", buildings_grid)
+
+    # Get the buildings
+    buildings = []
+    for building_id in np.unique(buildings_grid):
+        if building_id != 0:  # Skip building 0, since there is no building 0
+            # Find connected components (clusters) of the current building
+            labeled_zones = label(buildings_grid == building_id, connectivity=2)  # Set connectivity to 2
+            buildings.extend(regionprops(labeled_zones))
+        
+    # Get all instances of both zones
+    building_1s = []
+    building_2s = []
+    building_label = 0
+    for building in buildings:
+        if (building.label == 1):
+            building_label += 1
+        if (building_label == building_1):
+            building_1s.append(building.coords)
+        elif (building_label == building_2):
+            building_2s.append(building.coords)
+    print("buildings_1s len", len(building_1s))
+    print("buildings_2s len", len(building_2s))
+
+    # If both types of buildings are not present, 
+    # a perfect score is given if "far" is the preferred relative position
+    if (len(building_1s) == 0 or len(building_2s) == 0):
+        if (desired_rel_position == "far"):
+            return 1
+    
+    # Calculate the average distance between each building_1 and each building_2
+    total_dist = 0
+    for z1_coords in building_1s:
+        for z2_coords in building_2s:
+            test = np.zeros((W, H))
+            for x, y in z1_coords:
+                test[x][y] = 1
+            for x, y in z2_coords:
+                test[x][y] = 2
+            min_dist = cdist(np.argwhere(test==1),np.argwhere(test==2),'euclidean').min()
+            print("min dist", min_dist)
+            total_dist += min_dist
+    avg_dist = total_dist / (len(building_1s) * len(building_2s))
+    print("avg dist", avg_dist)
+
+    # Calculate the max possible distance
+    max_dist = ((W-1) ** 2 + (H-1) ** 2) ** 0.5
+    print("max dist", max_dist)
 
     # Calculate the fitness score
     score = -1
@@ -109,72 +179,8 @@ def calculate_zone_proximity_score(chromosome: list[int],
         score = avg_dist / max_dist
     elif (desired_rel_position == "near"):
         score = (max_dist - avg_dist) / max_dist
+    print("score", score)
     return score
-
-
-
-def calculate_building_proximity_score(chromosome: list[int], 
-                                                zones: list[int],
-                                                building_1: int,
-                                                building_2: int,
-                                                W: int,
-                                                H: int,
-                                                desired_rel_position: string):
-    
-    # Get the buildings and zones
-    grid = np.array(chromosome).reshape((W, H))
-    zones = np.array(zones).reshape((W, H))
-
-    # Get the regions
-    regions = []
-    for zone_id in np.unique(zones):
-        if zone_id != 0:  # Skip zone 0, which is considered background
-            # Find connected components (clusters) of the current zone
-            labeled_zones = label(zones == zone_id, connectivity=2)  # Set connectivity to 2
-            regions.extend(regionprops(labeled_zones))
-    
-    overall_score = 0
-    for region in regions:
-        # Get all instancecs of both building types in a given region
-        building_1s = []
-        building_2s = []
-        for x, y in region.coords:
-            if (grid[x][y] == building_1):
-                building_1s.append([x, y])
-            elif (grid[x][y] == building_2):
-                building_2s.append([x, y])
-
-        # If both types of buildings are not in the region, 
-        # a perfect score is given if "far" is the preferred relative position
-        if (len(building_1s) == 0 or len(building_2s) == 0):
-            if (desired_rel_position == "far"):
-                overall_score += 1
-            continue
-        
-        # Otherwise, calculate the region's fitness score
-        # Calculate the max distance for the given region
-        max_dist = 0
-        for pair in combinations(region.coords, 2):
-            x1, y1 = pair[0]
-            x2, y2 = pair[1]
-            total_dist = ((x2-x1) ** 2 + (y2-y1) ** 2) ** 0.5
-            if (total_dist > max_dist):
-                max_dist = total_dist
-        
-        # Calculate the distance between each building 1 and each building 2
-        total_dist = 0
-        for x1, y1 in building_1s:
-            for x2, y2 in building_2s:
-                total_dist += ((x2-x1) ** 2 + (y2-y1) ** 2) ** 0.5
-        avg_dist = total_dist / (len(building_1s) * len(building_2s))
-        if (desired_rel_position == "far"):
-            overall_score += (avg_dist / max_dist)
-        elif (desired_rel_position == "near"):
-            overall_score += ((max_dist - avg_dist) / max_dist)
-    
-    # Calculate the overall average score across all regions
-    overall_avg_score = overall_score / len(regions)
-    return overall_avg_score
 
 
     
