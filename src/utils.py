@@ -358,7 +358,7 @@ def plot_solution(chromosome, buildings_df, zones_df, W, H):
             ax.text(i + 0.5, j + 0.05, building_type, color='black', ha='center', va='bottom', fontsize=6, zorder=2)
     
     # add legend for zone colors 
-    legend_elements = [Rectangle((0, 0), 1, 1, color=zone_colors[zone_id], label=zone_type) for zone_id, zone_type in zones_df.set_index("id")["type"].items()]
+    legend_elements = [Rectangle((0, 0), 1, 1, color=zone_colors[zone_id], label=zone_type, alpha=0.5) for zone_id, zone_type in zones_df.set_index("id")["type"].items()]
     legend = ax.legend(handles=legend_elements, loc='upper right', title='Zone Types', bbox_to_anchor=(1.25, 1))
     
     ax.set_xlim(0, W)
