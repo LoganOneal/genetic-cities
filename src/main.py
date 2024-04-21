@@ -2,8 +2,8 @@ import numpy as np
 import pygad
 import time
 
-from dataloaders import load_zone_info, load_zone_relationship_info, load_building_info, load_building_relationship_info, load_relationship_graph
 import constants
+from dataloaders import load_zone_info, load_zone_relationship_info, load_building_info, load_building_relationship_info, load_relationship_graph
 from initialization import initialize_population
 from utils import calculate_community_fitness, plot_solution
 
@@ -11,8 +11,6 @@ zones_df = load_zone_info("./data/zones.csv")
 zone_relationships_df = load_zone_relationship_info("./data/zone_relationships.csv")
 buildings_df  = load_building_info("./data/buildings.csv")
 building_relationships_df = load_building_relationship_info("./data/building_relationships.csv")
-
-#building_relationship_graph, building_must_be_close = load_relationship_graph(num_buildings, "./data/building_relationships.csv")
 
 n_iter = 1
 def main():
@@ -45,9 +43,9 @@ def main():
                            initial_population=initial_population,
                            gene_type=int,
                            gene_space=range(1, len(buildings_df)+1),
-                           parent_selection_type="tournament",
-                           keep_parents=-1,
-                           crossover_type="uniform",
+                           parent_selection_type=constants.PARENT_SELECTION_TYPE,
+                           keep_parents=constants.NUM_PARENTS_KEPT,
+                           crossover_type=constants.CROSSOVER_TYPE,
                            mutation_type=mutation_func,
                            on_generation=on_generation, 
                           )
