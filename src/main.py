@@ -51,7 +51,7 @@ def main():
                            gene_space=range(1, len(buildings_df)+1),
                            parent_selection_type="sss",
                            keep_parents=-1,
-                           crossover_type="single_point",
+                           crossover_type="uniform",
                            mutation_type=mutation_func,
                            on_generation=on_generation, 
                           )
