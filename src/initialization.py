@@ -25,7 +25,6 @@ def initialize_population(sol_per_pop, buildings_df, zones_df, W, H):
                 # set chromosme indx to building id
                 chromosome[i, j] = building["id"]
 
-        print("Chromosome", chromosome.shape)
         chromosome = chromosome.flatten()
         initial_population.append(chromosome)
         
