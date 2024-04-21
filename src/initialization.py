@@ -30,19 +30,21 @@ def initialize_population(sol_per_pop, buildings_df, zones_df, W, H):
         initial_population.append(chromosome)
         
     
-        
-    zones = np.zeros((W // ZONE_W, H // ZONE_H))
-    # each zone cell represent a ZONE_W x ZONE_H section
-    for i in range(zones.shape[0]):
-        for j in range(zones.shape[1]):
-            zone = zones_df.sample()
-            zones[i, j] = zone["id"]
+    initial_zones = []
+    for _ in range(sol_per_pop):
+        zones = np.zeros((W // ZONE_W, H // ZONE_H))
+        # each zone cell represent a ZONE_W x ZONE_H section
+        for i in range(zones.shape[0]):
+            for j in range(zones.shape[1]):
+                zone = zones_df.sample()
+                zones[i, j] = zone["id"]
 
-    zones = zones.flatten()
+        zones = zones.flatten()
+        initial_zones.append(zones)
     
     # append zone to each chromosome
     for i in range(len(initial_population)):
-        initial_population[i] = np.append(initial_population[i], zones)
+        initial_population[i] = np.append(initial_population[i], initial_zones[i])
                     
     return initial_population            
 def initialize_road_network(W, max_nodes):

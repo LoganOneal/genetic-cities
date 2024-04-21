@@ -1,10 +1,5 @@
 import numpy as np
-import pandas as pd
 import pygad
-import cvxpy as cp
-import networkx as nx
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 import time
 
 from dataloaders import load_zone_info, load_zone_relationship_info, load_building_info, load_building_relationship_info, load_relationship_graph
@@ -27,6 +22,7 @@ def main():
     def on_generation(ga_instance):
         global n_iter
         print("Generation: ", n_iter)
+        print("Best Solution: ", ga_instance.best_solution())
         n_iter += 1
 
     def mutation_func(offspring, ga_instance):
@@ -49,7 +45,7 @@ def main():
                            initial_population=initial_population,
                            gene_type=int,
                            gene_space=range(1, len(buildings_df)+1),
-                           parent_selection_type="sss",
+                           parent_selection_type="tournament",
                            keep_parents=-1,
                            crossover_type="uniform",
                            mutation_type=mutation_func,

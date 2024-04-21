@@ -7,8 +7,9 @@ import pandas as pd
 from constants import NEARNESS_SCALE, W, H, ZONE_W, ZONE_H
 from skimage.measure import label, regionprops
 from matplotlib.colors import ListedColormap
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist, euclidean, cityblock
 import roads.globals as globals
+import heapq
 
 def calculate_community_fitness(chromosome: list[int], 
                                 buildings_df: pd.DataFrame,
@@ -33,9 +34,13 @@ def calculate_community_fitness(chromosome: list[int],
     building_in_correct_zone_score = calculate_percent_of_buildings_in_correct_zone(chromosome, buildings_df, W, H)
     zone_proximity_score = calculate_overall_zone_proximity_score(chromosome, zone_relationships_df, W, H)
     building_proximity_score = calculate_overall_building_proximity_score(chromosome, building_relationships_df, W, H)
-    score = (0.3 * building_in_correct_zone_score) + \
-            (0.35 * zone_proximity_score) + \
-            (0.35 * building_proximity_score)  
+    commute_score = calculate_commute_score(chromosome, W, H)
+
+    score = (0.5 * building_in_correct_zone_score) + \
+            (0.25 * zone_proximity_score) + \
+            (0.20 * building_proximity_score) + \
+            (0.05 * commute_score)
+    
     return score
 
 
@@ -239,6 +244,77 @@ def calculate_building_proximity_score(chromosome: list[int],
         score = avg_dist / max_dist
     elif (desired_rel_position == "near"):
         score = (max_dist - avg_dist) / max_dist
+    return score
+
+
+def dijkstra(graph, start):
+    dists = {vertex: float('inf') for vertex in graph}
+    dists[start] = 0
+    priority_queue = [(0, start)]
+
+    while priority_queue:
+        current_dist, current_vertex = heapq.heappop(priority_queue)
+
+        if current_dist > dists[current_vertex]:
+            continue
+
+        for neighbor in graph[current_vertex]:
+            dist = current_dist + graph[current_vertex][neighbor]
+            if dist < dists[neighbor]:
+                dists[neighbor] = dist
+                heapq.heappush(priority_queue, (dist, neighbor))
+
+    return dists
+
+def calculate_commute_score(chromosome: list[int],
+                            W: int,
+                            H: int):
+
+    # average the distance between residential zones and other zones with job opportunities using the road network
+
+    zones_grid = np.array(chromosome[W*H:]).reshape((W // ZONE_W, H // ZONE_H))
+
+    residential_points = set()
+    edges = []
+    points = {}
+
+    for point in globals.edges:
+        if point in globals.coord_id:
+            if zones_grid[int(point.x / 2)][int(point.y / 2)] == 1: # residential zone
+                residential_points.add(globals.coord_id[point])
+            points[globals.coord_id[point]] = (point.x, point.y)
+        
+        for edge in globals.edges[point]:
+            edges.append((globals.coord_id[point], globals.coord_id[edge]))
+
+    if len(residential_points) == 0:
+        return 0
+
+    graph = {point: {} for point in points}
+
+    for edge in edges:
+        point1, point2 = edge
+        dist = euclidean(points[point1], points[point2])
+        graph[point1][point2] = dist
+        graph[point2][point1] = dist
+
+    score = 0
+    all_distances = []
+
+    for start_point in residential_points:
+        dists = dijkstra(graph, start_point)
+
+        for point_id, dist in dists.items():
+            if point_id not in residential_points:
+                all_distances.append(dist)
+
+    # value closer points more heavily since people tend to work near their homes
+    score = np.average(all_distances, weights=np.linspace(1, 0, len(all_distances)))
+
+    # normalize
+    max_dist = cdist([[0,0], [W ,0]], [[W, H], [0, H]], 'cityblock').max()
+    score = abs(1 - ((max_dist - score) / max_dist))
+
     return score
 
 
