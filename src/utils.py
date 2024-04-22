@@ -36,14 +36,39 @@ def calculate_community_fitness(chromosome: list[int],
     zone_proximity_score = calculate_overall_zone_proximity_score(chromosome, zone_relationships_df, W, H)
     building_proximity_score = calculate_overall_building_proximity_score(chromosome, building_relationships_df, W, H)
     commute_score = calculate_commute_score(chromosome, W, H)
+    diversity_score = calculate_zone_diversity_score(chromosome, W, H)
 
-    score = (0.5 * building_in_correct_zone_score) + \
-            (0.25 * zone_proximity_score) + \
-            (0.20 * building_proximity_score) + \
+    score = (0.6 * building_in_correct_zone_score) + \
+            (0.20 * zone_proximity_score) + \
+            (0.15 * building_proximity_score) + \
             (0.05 * commute_score)
     
     return score
 
+
+def calculate_zone_diversity_score(chromosome: list[int],
+                                      W: int,
+                                        H: int):
+    zone_count = dict()
+    
+    # calculate the diversity score of the zones
+    zones_grid = np.array(chromosome[W*H:]).reshape((W // ZONE_W, H // ZONE_H))
+    
+    for i in range(W // ZONE_W):
+        for j in range(H // ZONE_H):
+            zone_id = zones_grid[i, j]
+            zone_count[zone_id] = zone_count.get(zone_id, 0) + 1
+
+    total_zones = (W // ZONE_W) * (H // ZONE_H)
+
+    # calculate the diversity score based on expected zone weighting
+    score = 1 - (abs(zone_count.get(1, 0) / total_zones - 0.4) + \
+                 abs(zone_count.get(2, 0) / total_zones - 0.2) + \
+                 abs(zone_count.get(3, 0) / total_zones - 0.1) + \
+                 abs(zone_count.get(4, 0) / total_zones - 0.2) + \
+                 abs(zone_count.get(5, 0) / total_zones - 0.1))
+
+    return score
 
 
 def calculate_percent_of_buildings_in_correct_zone(chromosome: list[int], 
