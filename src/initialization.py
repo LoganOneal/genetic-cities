@@ -10,9 +10,6 @@ def initialize_population(sol_per_pop, buildings_df, zones_df, W, H):
     
     print("Initializing population")
     # create a population where each chronosome is a W * H grid of buildings with random positions
-    min_area = W*H
-    if min_area < len(buildings_df):
-        raise ValueError("The area of the community is too small for the number of buildings")
 
     initial_population = []
     for _ in range(sol_per_pop):
