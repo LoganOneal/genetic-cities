@@ -64,7 +64,7 @@ def calculate_percent_of_buildings_in_correct_zone(chromosome: list[int],
                 if building["zone"].values[0] == zone_id:
                     zone_score += 1
                 
-    zone_score /= N
+    zone_score /= ((W // ZONE_W) * (H // ZONE_H))
     score = zone_score
     return score
 
@@ -313,7 +313,7 @@ def calculate_commute_score(chromosome: list[int],
     score = np.average(all_distances, weights=np.linspace(1, 0, len(all_distances)))
 
     # normalize
-    max_dist = cdist([[0,0], [W ,0]], [[W, H], [0, H]], 'cityblock').max()
+    max_dist = max(all_distances)
     score = abs(1 - ((max_dist - score) / max_dist))
 
     return score
