@@ -62,8 +62,8 @@ def main():
     print(best_score)
 
     # plot the best solution
+    #plot_solution(best_chromosome, buildings_df, zones_df, constants.W, constants.H)
     plot_solution(best_chromosome, buildings_df, zones_df, constants.W, constants.H)
-
     #ga_instance.plot_fitness()
     # ga_instance.plot_genes()
     # ga_instance.plot_new_solution_rate()

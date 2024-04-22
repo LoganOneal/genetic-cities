@@ -10,6 +10,7 @@ from matplotlib.colors import ListedColormap
 from scipy.spatial.distance import cdist, euclidean, cityblock
 import roads.globals as globals
 import heapq
+from PIL import Image  
 
 def calculate_community_fitness(chromosome: list[int], 
                                 buildings_df: pd.DataFrame,
@@ -326,59 +327,46 @@ def plot_solution(chromosome, buildings_df, zones_df, W, H):
     # reshape the remaining elements into a W // ZONE_W x H // ZONE_H zone grid
     zones_grid = np.array(chromosome[W*H:]).reshape((W // ZONE_W, H // ZONE_H))
     
-    # Create a color map based on unique values in the chromosome
-    unique_values = np.unique(buildings_grid)
-    color_map = plt.cm.get_cmap('viridis', len(unique_values))
+    print(zones_grid)
     
-    # Plot the grid
-    plt.figure(figsize=(20, 12))  # Adjust figure size as needed
-    plt.imshow(buildings_grid, cmap=color_map, interpolation='nearest')
+    # create a dict for each zone color
+    zone_colors = {
+        1: 'red',
+        2: 'blue',
+        3: 'green',
+        4: 'yellow',
+        5: 'purple',
+    }
     
-    # Add grid lines
-    plt.grid(True, which='both', color='black', linewidth=0.5)
-    
-    # Set labels and title
-    plt.xlabel('Width')
-    plt.ylabel('Height')
-    plt.title('Chromosome Grid Visualization')
-        
-    # Add legend mapping chromosome index to building type
-    legend_labels = {}
-    for index, row in buildings_df.iterrows():
-        legend_labels[index] = row['type']
-        
-    legend_handles = []
-    for value in unique_values:
-        legend_handles.append(plt.Rectangle((0,0),1,1,color=color_map(value)))
-    
-    plt.legend(legend_handles, [legend_labels[value-1] for value in unique_values], loc='upper left', title='Building Type', bbox_to_anchor=(1.05, 1), borderaxespad=0.)
-    
-    
-    print("Zones df", zones_df)
-    
-    print("Zones grid", zones_grid)
-    
-    # scale zones_grid to size of buildings_grid
-    zones_grid = np.repeat(np.repeat(zones_grid, ZONE_W, axis=0), ZONE_H, axis=1)
+    fig, ax = plt.subplots(figsize=(W, H))
+    ax.set_aspect('equal')
 
-    # Label zones with bounding boxes
-    for zone_id in np.unique(zones_grid):
-        if zone_id != 0:  # Skip zone 0, which is considered background
-            # Find connected components (clusters) of the current zone
-            labeled_zones = label(zones_grid == zone_id, connectivity=2)  # Set connectivity to 2
-            regions = regionprops(labeled_zones)
-            print("Regions", regions)
-            # Draw bounding boxes around each cluster of the current zone
-            for region in regions:
-                min_y, min_x, max_y, max_x = region.bbox
-                width = max_x - min_x
-                height = max_y - min_y
-                plt.gca().add_patch(plt.Rectangle((min_x - 0.5, min_y - 0.5), width, height, fill=False, edgecolor='red', linewidth=2))
-                
-                # Get zone type from zones_df based on zone_id
-                zone_type = zones_df[zones_df["id"] == zone_id]["type"].values[0]
-                
-                # Annotate the zone with its type
-                plt.text((min_x + .5), (min_y + .5), zone_type, color='black', ha='center', va='center')
+    for i in range(W):
+        for j in range(H):
+            rect = plt.Rectangle((i, j), 1, 1, linewidth=1, edgecolor='black', facecolor=zone_colors[zones_grid[i // ZONE_W, j // ZONE_H]], alpha=0.5, zorder=0)
+            ax.add_patch(rect)
 
+    # Draw the icon on each cell after drawing rectangles
+    for i in range(W):
+        for j in range(H):
+            building_id = buildings_grid[i, j]
+            building_type = buildings_df[buildings_df["id"] == building_id]["type"].values[0].replace(" ", "").strip('"')
+            icon_img = Image.open(f"./images/icons/{building_type}.png")
+            icon = np.array(icon_img)
+            ax.imshow(icon, extent=(i, i + 1, j, j + 1), alpha=1, zorder=1)  # Plot the icon
+            # draw the building type text on the icon
+            ax.text(i + 0.5, j + 0.05, building_type, color='black', ha='center', va='bottom', fontsize=6, zorder=2)
+    
+    # add legend for zone colors 
+    legend_elements = [Rectangle((0, 0), 1, 1, color=zone_colors[zone_id], label=zone_type, alpha=0.5) for zone_id, zone_type in zones_df.set_index("id")["type"].items()]
+    legend = ax.legend(handles=legend_elements, loc='upper right', title='Zone Types', bbox_to_anchor=(1.25, 1))
+    
+    ax.set_xlim(0, W)
+    ax.set_ylim(0, H)
+    ax.set_xticks(range(W + 1))
+    ax.set_yticks(range(H + 1))
+    ax.grid(True)
+    ax.set_axisbelow(True)
+    ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
     plt.show()
+        
