@@ -38,11 +38,12 @@ def calculate_community_fitness(chromosome: list[int],
     commute_score = calculate_commute_score(chromosome, W, H)
     diversity_score = calculate_zone_diversity_score(chromosome, W, H)
 
-    score = (0.6 * building_in_correct_zone_score) + \
-            (0.20 * zone_proximity_score) + \
+    score = (0.55 * building_in_correct_zone_score) + \
+            (0.15 * zone_proximity_score) + \
             (0.15 * building_proximity_score) + \
-            (0.05 * commute_score)
-    
+            (0.05 * commute_score) + \
+            (0.10 * diversity_score)
+
     return score
 
 
@@ -57,7 +58,8 @@ def calculate_zone_diversity_score(chromosome: list[int],
     for i in range(W // ZONE_W):
         for j in range(H // ZONE_H):
             zone_id = zones_grid[i, j]
-            zone_count[zone_id] = zone_count.get(zone_id, 0) + 1
+            if zone_id != 0: 
+                zone_count[zone_id] = zone_count.get(zone_id, 0) + 1
 
     total_zones = (W // ZONE_W) * (H // ZONE_H)
 
@@ -76,21 +78,23 @@ def calculate_percent_of_buildings_in_correct_zone(chromosome: list[int],
                                                    W: int,
                                                    H: int):
     # get the number of buildings in the community
-    N = len(buildings_df)    
+    N = W*H   
 
     # calculate the percent of buildings in the correct zone 
-    zone_score = 0
+    buildings_in_correct_zone = 0
     for i in range(W // ZONE_W):
         for j in range(H // ZONE_H):
-            zone_id = chromosome[W * H + i * W // ZONE_W + j]
+            zone_id = chromosome[W * H + i * (W // ZONE_W) + j]
             if zone_id != 0:
-                building_id = chromosome[i * W // ZONE_W + j]
-                building = buildings_df[buildings_df["id"] == building_id]
-                if building["zone"].values[0] == zone_id:
-                    zone_score += 1
+                for k in range(ZONE_W*i, ZONE_W*i + ZONE_W):
+                    for l in range(ZONE_H*j, ZONE_H*j + ZONE_H):
+                        building_id = chromosome[k * W + l]
+                        building = buildings_df[buildings_df["id"] == building_id]
+                        if building["zone"].values[0] == zone_id:
+                            buildings_in_correct_zone += 1
                 
-    zone_score /= ((W // ZONE_W) * (H // ZONE_H))
-    score = zone_score
+    buildings_in_correct_zone /= N
+    score = buildings_in_correct_zone
     return score
 
 
@@ -306,7 +310,7 @@ def calculate_commute_score(chromosome: list[int],
 
     for point in globals.edges:
         if point in globals.coord_id:
-            if zones_grid[int(point.x / 2)][int(point.y / 2)] == 1: # residential zone
+            if zones_grid[int(point.x / ZONE_W)][int(point.y / ZONE_H)] == 1: # residential zone
                 residential_points.add(globals.coord_id[point])
             points[globals.coord_id[point]] = (point.x, point.y)
         
