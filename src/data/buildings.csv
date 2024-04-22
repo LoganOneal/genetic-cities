@@ -15,7 +15,7 @@ id,type,min_area,min_width,zone,width,height
 14, "park", 1400,, 5, 3, 3
 15, "gym", 1500,, 2, 2, 2
 16, "theater", 1600,, 2, 3, 3
-17, "museum", 1700,, 2, 3, 3
+17, "museum", 1700,, 5, 3, 3
 18, "library", 1800,, 5, 1, 1
 19, "fire_station", 1900,, 5, 1, 1
 20, "police_station", 2000,, 5, 1, 1
