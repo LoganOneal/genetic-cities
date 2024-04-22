@@ -1,12 +1,12 @@
 import numpy as np
 import networkx as nx
-from constants import ZONE_W, ZONE_H
+from constants import ZONE_W, ZONE_H, MAX_ROAD_NODES
 from roads.RoadGenerator import RoadGenerator
 
 DEBUG = True
 
 def initialize_population(sol_per_pop, buildings_df, zones_df, W, H):
-    initialize_road_network(W, W)
+    initialize_road_network(W, MAX_ROAD_NODES)
     
     print("Initializing population")
     # create a population where each chronosome is a W * H grid of buildings with random positions
